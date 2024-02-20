@@ -288,7 +288,7 @@ type InvoiceResponse struct {
 
 	Id      string            `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`                                       // ID of the invoice
 	Status  InvoiceStatusEnum `protobuf:"varint,2,opt,name=status,proto3,enum=proto.InvoiceStatusEnum" json:"status,omitempty"` // Status of invoice generation
-	Invoice []byte            `protobuf:"bytes,3,opt,name=invoice,proto3" json:"invoice,omitempty"`                             // binary data for generated invoice text file
+	Invoice []byte            `protobuf:"bytes,3,opt,name=invoice,proto3" json:"invoice,omitempty"`                             // binary data for generated invoice
 }
 
 func (x *InvoiceResponse) Reset() {

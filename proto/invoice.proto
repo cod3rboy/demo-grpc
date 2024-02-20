@@ -37,5 +37,5 @@ message InvoiceRequest {
 message InvoiceResponse {
     string id = 1; // ID of the invoice
     InvoiceStatusEnum status = 2; // Status of invoice generation
-    bytes invoice = 3; // binary data for generated invoice text file
+    bytes invoice = 3; // binary data for generated invoice
 }

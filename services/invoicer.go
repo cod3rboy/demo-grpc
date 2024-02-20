@@ -83,7 +83,6 @@ func (s *invoicerService) Get(ctx context.Context, request *pb.InvoiceRequest) (
 	response.Status = invoice.Status
 	response.Invoice = make([]byte, len(invoice.Data))
 	copy(response.Invoice, invoice.Data)
-	mu.Unlock()
 
 	return response, nil
 }
@@ -106,7 +105,7 @@ func (s *invoicerService) invoiceGenerator() {
 
 func (s *invoicerService) makeInvoice(id string, t Transaction) {
 	// simulate time to generate invoice
-	time.Sleep(4 * time.Second)
+	time.Sleep(10 * time.Second)
 	// adding randomness for failure/success cases
 	if rand.Float64() < 0.5 {
 		log.Printf("failed to generate invoice %s", id)
