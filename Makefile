@@ -6,3 +6,5 @@ invoice-create:
 	go run ./cmd/client --action=create
 invoice-query:
 	go run ./cmd/client --action=query
+invoice-list:
+	go run ./cmd/client --action=list

@@ -10,6 +10,7 @@ import (
 
 	pb "github.com/cod3rboy/demo-grpc/proto"
 	"github.com/google/uuid"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Invoice struct {
@@ -67,6 +68,31 @@ func (s *invoicerService) Create(ctx context.Context, create *pb.CreateRequest) 
 	return response, nil
 }
 
+func (s *invoicerService) ListAll(_ *emptypb.Empty, request pb.InvoicerService_ListAllServer) error {
+	mu.Lock()
+	responses := make([]*pb.InvoiceResponse, 0, len(invoices))
+	for _, invoice := range invoices {
+		data := make([]byte, len(invoice.Data))
+		copy(data, invoice.Data)
+		responses = append(responses, &pb.InvoiceResponse{
+			Id:      invoice.ID,
+			Status:  invoice.Status,
+			Invoice: data,
+		})
+	}
+	mu.Unlock()
+
+	// stream responses
+	for _, response := range responses {
+		time.Sleep(1 * time.Second)
+		if err := request.Send(response); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *invoicerService) Get(ctx context.Context, request *pb.InvoiceRequest) (*pb.InvoiceResponse, error) {
 	log.Println("received query for invoice")
 	// construct response
@@ -107,7 +133,7 @@ func (s *invoicerService) makeInvoice(id string, t Transaction) {
 	// simulate time to generate invoice
 	time.Sleep(10 * time.Second)
 	// adding randomness for failure/success cases
-	if rand.Float64() < 0.5 {
+	if rand.Float64() < 0.3 {
 		log.Printf("failed to generate invoice %s", id)
 		// invoice generation failed
 		mu.Lock()

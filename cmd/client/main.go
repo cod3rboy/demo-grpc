@@ -4,12 +4,14 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
 	pb "github.com/cod3rboy/demo-grpc/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var (
@@ -26,6 +28,8 @@ func main() {
 		handleCreate()
 	case "query":
 		handleQuery()
+	case "list":
+		handleList()
 	default:
 		fmt.Println("missing/invalid action! use '-action create' or '-action query'")
 		os.Exit(1)
@@ -73,6 +77,32 @@ func handleQuery() {
 		fmt.Printf("query invoice failed: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Println("Invoice Status:", response.Status)
-	fmt.Println(string(response.Invoice))
+	fmt.Println("Invoice Status:", response.GetStatus())
+	fmt.Println(string(response.GetInvoice()))
+}
+
+func handleList() {
+	conn, err := grpc.Dial(*server, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		fmt.Printf("failed server connection: %v\n", err)
+		os.Exit(1)
+	}
+	client := pb.NewInvoicerServiceClient(conn)
+	stream, err := client.ListAll(context.Background(), &emptypb.Empty{})
+	if err != nil {
+		fmt.Printf("failed to create stream: %v\n", err)
+	}
+	for {
+		response, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Printf("error while streaming: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("Invoice ID:", response.GetId())
+		fmt.Println("Invoice Status:", response.GetStatus())
+		fmt.Println(string(response.GetInvoice()))
+	}
 }

@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -24,6 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type InvoicerServiceClient interface {
 	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
 	Get(ctx context.Context, in *InvoiceRequest, opts ...grpc.CallOption) (*InvoiceResponse, error)
+	ListAll(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (InvoicerService_ListAllClient, error)
 }
 
 type invoicerServiceClient struct {
@@ -52,12 +54,45 @@ func (c *invoicerServiceClient) Get(ctx context.Context, in *InvoiceRequest, opt
 	return out, nil
 }
 
+func (c *invoicerServiceClient) ListAll(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (InvoicerService_ListAllClient, error) {
+	stream, err := c.cc.NewStream(ctx, &InvoicerService_ServiceDesc.Streams[0], "/proto.InvoicerService/ListAll", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &invoicerServiceListAllClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type InvoicerService_ListAllClient interface {
+	Recv() (*InvoiceResponse, error)
+	grpc.ClientStream
+}
+
+type invoicerServiceListAllClient struct {
+	grpc.ClientStream
+}
+
+func (x *invoicerServiceListAllClient) Recv() (*InvoiceResponse, error) {
+	m := new(InvoiceResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // InvoicerServiceServer is the server API for InvoicerService service.
 // All implementations must embed UnimplementedInvoicerServiceServer
 // for forward compatibility
 type InvoicerServiceServer interface {
 	Create(context.Context, *CreateRequest) (*CreateResponse, error)
 	Get(context.Context, *InvoiceRequest) (*InvoiceResponse, error)
+	ListAll(*emptypb.Empty, InvoicerService_ListAllServer) error
 	mustEmbedUnimplementedInvoicerServiceServer()
 }
 
@@ -70,6 +105,9 @@ func (UnimplementedInvoicerServiceServer) Create(context.Context, *CreateRequest
 }
 func (UnimplementedInvoicerServiceServer) Get(context.Context, *InvoiceRequest) (*InvoiceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedInvoicerServiceServer) ListAll(*emptypb.Empty, InvoicerService_ListAllServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListAll not implemented")
 }
 func (UnimplementedInvoicerServiceServer) mustEmbedUnimplementedInvoicerServiceServer() {}
 
@@ -120,6 +158,27 @@ func _InvoicerService_Get_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InvoicerService_ListAll_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(emptypb.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(InvoicerServiceServer).ListAll(m, &invoicerServiceListAllServer{stream})
+}
+
+type InvoicerService_ListAllServer interface {
+	Send(*InvoiceResponse) error
+	grpc.ServerStream
+}
+
+type invoicerServiceListAllServer struct {
+	grpc.ServerStream
+}
+
+func (x *invoicerServiceListAllServer) Send(m *InvoiceResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // InvoicerService_ServiceDesc is the grpc.ServiceDesc for InvoicerService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -136,6 +195,12 @@ var InvoicerService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _InvoicerService_Get_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ListAll",
+			Handler:       _InvoicerService_ListAll_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/invoice.proto",
 }

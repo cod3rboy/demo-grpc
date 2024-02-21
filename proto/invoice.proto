@@ -4,9 +4,12 @@ package proto;
 
 option go_package="github.com/cod3rboy/demo-grpc/proto";
 
+import "google/protobuf/empty.proto";
+
 service InvoicerService {
     rpc Create(CreateRequest) returns (CreateResponse);
     rpc Get(InvoiceRequest) returns (InvoiceResponse);
+    rpc ListAll(google.protobuf.Empty) returns (stream InvoiceResponse);
 }
 
 message Amount {
