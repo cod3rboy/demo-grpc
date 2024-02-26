@@ -5,13 +5,15 @@ import (
 	"log"
 	"net"
 
+	"github.com/cod3rboy/demo-grpc/interceptors"
 	pb "github.com/cod3rboy/demo-grpc/proto"
 	"github.com/cod3rboy/demo-grpc/services"
 	"google.golang.org/grpc"
 )
 
 var (
-	port = flag.String("port", "8000", "server port")
+	port      = flag.String("port", "8000", "server port")
+	intercept = flag.Bool("intercept", false, "intercept and log RPC calls")
 )
 
 func main() {
@@ -22,7 +24,11 @@ func main() {
 		log.Fatalf("error while starting listener: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	srvOpts := make([]grpc.ServerOption, 0)
+	if *intercept {
+		srvOpts = append(srvOpts, grpc.UnaryInterceptor(interceptors.LoggingInterceptor))
+	}
+	grpcServer := grpc.NewServer(srvOpts...)
 
 	// Register our service with gRPC server
 	invoicerService := services.NewInvoicerService()
