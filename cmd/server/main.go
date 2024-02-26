@@ -26,7 +26,7 @@ func main() {
 
 	srvOpts := make([]grpc.ServerOption, 0)
 	if *intercept {
-		srvOpts = append(srvOpts, grpc.UnaryInterceptor(interceptors.LoggingInterceptor))
+		srvOpts = append(srvOpts, grpc.UnaryInterceptor(interceptors.UnaryServerLoggingInterceptor))
 	}
 	grpcServer := grpc.NewServer(srvOpts...)
 

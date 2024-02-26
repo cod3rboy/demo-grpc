@@ -7,14 +7,16 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cod3rboy/demo-grpc/interceptors"
 	pb "github.com/cod3rboy/demo-grpc/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
-	action = flag.String("action", "", "specify invoice action (create,query)")
-	server = flag.String("server", "localhost:8000", "server address")
+	action    = flag.String("action", "", "specify invoice action (create,query)")
+	server    = flag.String("server", "localhost:8000", "server address")
+	intercept = flag.Bool("intercept", false, "intercept and log RPC call")
 )
 
 func main() {
@@ -38,7 +40,14 @@ func handleCreate() {
 	service := PromptService()
 	person := PromptPerson()
 
-	conn, err := grpc.Dial(*server, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	dialOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+	if *intercept {
+		dialOpts = append(dialOpts, grpc.WithUnaryInterceptor(interceptors.UnaryClientLoggingInterceptor))
+	}
+
+	conn, err := grpc.Dial(*server, dialOpts...)
 	if err != nil {
 		fmt.Printf("failed server connection: %v\n", err)
 		os.Exit(1)
@@ -62,7 +71,14 @@ func handleCreate() {
 func handleQuery() {
 	invoiceId := PromptInvoiceId()
 
-	conn, err := grpc.Dial(*server, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	dialOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+	if *intercept {
+		dialOpts = append(dialOpts, grpc.WithUnaryInterceptor(interceptors.UnaryClientLoggingInterceptor))
+	}
+
+	conn, err := grpc.Dial(*server, dialOpts...)
 	if err != nil {
 		fmt.Printf("failed server connection: %v\n", err)
 		os.Exit(1)
